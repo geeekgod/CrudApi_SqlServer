@@ -11,6 +11,7 @@
   "profiles": {
     "SqlServerRestApi": {
       "commandName": "Project",
+      "hotReloadEnabled": true,
       "dotnetRunMessages": true,
       "launchBrowser": true,
       "launchUrl": "api/Department",
@@ -21,6 +22,7 @@
     },
     "IIS Express": {
       "commandName": "IISExpress",
+      "hotReloadEnabled": true,
       "launchBrowser": true,
       "launchUrl": "api/Department",
       "environmentVariables": {

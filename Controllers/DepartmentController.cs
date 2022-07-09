@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System.Data.SqlClient;
 using System.Data;
 using SqlServerRestApi.Models;
+using Utils.Messages;
 
 namespace SqlServerRestApi.Controllers
 {
@@ -27,7 +28,7 @@ namespace SqlServerRestApi.Controllers
 
             string sqlDataSource = _configuration.GetConnectionString("SqlDataBase");
             SqlDataReader myReader;
-            using(SqlConnection myCon = new SqlConnection(sqlDataSource))
+            using (SqlConnection myCon = new SqlConnection(sqlDataSource))
             {
                 myCon.Open();
                 using (SqlCommand myCommand = new SqlCommand(query, myCon))
@@ -41,6 +42,95 @@ namespace SqlServerRestApi.Controllers
             var jsonStr = JsonConvert.SerializeObject(table);
             var department = JsonConvert.DeserializeObject<IList<Department>>(jsonStr);
             return new JsonResult(department);
+
+        }
+
+
+
+        [HttpPost]
+        public JsonResult Post(Department dep)
+        {
+            string query = @"insert into dbo.Department
+                            values(@DeptName)
+                            ";
+
+            DataTable table = new DataTable();
+
+            string sqlDataSource = _configuration.GetConnectionString("SqlDataBase");
+            SqlDataReader myReader;
+            using (SqlConnection myCon = new SqlConnection(sqlDataSource))
+            {
+                myCon.Open();
+                using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                {
+                    myCommand.Parameters.AddWithValue("@DeptName", dep.DeptName);
+                    myReader = myCommand.ExecuteReader();
+                    table.Load(myReader);
+                    myReader.Close();
+                    myCon.Close();
+                }
+            }
+
+            return new JsonResult(new Created());
+
+        }
+
+        [HttpPut]
+        public JsonResult Update(Department dep)
+        {
+            string query = @"update dbo.Department
+                            set DeptName = @DeptName
+                            where Id = @Id
+                            ";
+
+            DataTable table = new DataTable();
+
+            string sqlDataSource = _configuration.GetConnectionString("SqlDataBase");
+            SqlDataReader myReader;
+            using (SqlConnection myCon = new SqlConnection(sqlDataSource))
+            {
+                myCon.Open();
+                using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                {
+                    myCommand.Parameters.AddWithValue("@Id", dep.Id);
+                    myCommand.Parameters.AddWithValue("@DeptName", dep.DeptName);
+                    myReader = myCommand.ExecuteReader();
+                    table.Load(myReader);
+                    myReader.Close();
+                    myCon.Close();
+                }
+            }
+
+            return new JsonResult(new Updated());
+
+        }
+
+
+        [HttpDelete("{Id}")]
+        public JsonResult Delete(int Id)
+        {
+            string query = @"delete dbo.Department
+                            where Id = @Id
+                            ";
+
+            DataTable table = new DataTable();
+
+            string sqlDataSource = _configuration.GetConnectionString("SqlDataBase");
+            SqlDataReader myReader;
+            using (SqlConnection myCon = new SqlConnection(sqlDataSource))
+            {
+                myCon.Open();
+                using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                {
+                    myCommand.Parameters.AddWithValue("@Id", Id);
+                    myReader = myCommand.ExecuteReader();
+                    table.Load(myReader);
+                    myReader.Close();
+                    myCon.Close();
+                }
+            }
+
+            return new JsonResult(new Deleted());
 
         }
 
