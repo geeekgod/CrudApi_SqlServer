@@ -4,6 +4,7 @@ using System.Data.SqlClient;
 using System.Data;
 using SqlServerRestApi.Models;
 using Utils.Messages;
+using Utils.DepartmentMethods;
 
 namespace SqlServerRestApi.Controllers
 {
@@ -20,117 +21,94 @@ namespace SqlServerRestApi.Controllers
 
 
         [HttpGet]
-        public JsonResult Get()
+        public IActionResult Get()
         {
-            string query = @"select * from dbo.Department";
+            DepartmentMethods Dept = new DepartmentMethods(_configuration);
+            return new JsonResult(Dept.listAllData());
+        }
 
-            DataTable table = new DataTable();
 
-            string sqlDataSource = _configuration.GetConnectionString("SqlDataBase");
-            SqlDataReader myReader;
-            using (SqlConnection myCon = new SqlConnection(sqlDataSource))
+        [HttpGet("{Id}")]
+        public IActionResult GetById(int Id)
+        {
+            DepartmentMethods Dept = new DepartmentMethods(_configuration);
+            var DeptById = Dept.listDataById(Id);
+            if(DeptById != null)
             {
-                myCon.Open();
-                using (SqlCommand myCommand = new SqlCommand(query, myCon))
-                {
-                    myReader = myCommand.ExecuteReader();
-                    table.Load(myReader);
-                    myReader.Close();
-                    myCon.Close();
-                }
+                return new JsonResult(DeptById);
             }
-            var jsonStr = JsonConvert.SerializeObject(table);
-            var department = JsonConvert.DeserializeObject<IList<Department>>(jsonStr);
-            return new JsonResult(department);
-
+            else
+            {
+                return NotFound();
+            }
         }
 
 
 
         [HttpPost]
-        public JsonResult Post(Department dep)
+        public IActionResult Post(Department dep)
         {
-            string query = @"insert into dbo.Department
-                            values(@DeptName)
-                            ";
+            DepartmentMethods Dept = new DepartmentMethods(_configuration);
 
-            DataTable table = new DataTable();
+            bool isCreated =  Dept.addDepartment(dep.DeptName);
 
-            string sqlDataSource = _configuration.GetConnectionString("SqlDataBase");
-            SqlDataReader myReader;
-            using (SqlConnection myCon = new SqlConnection(sqlDataSource))
+            if (isCreated)
             {
-                myCon.Open();
-                using (SqlCommand myCommand = new SqlCommand(query, myCon))
-                {
-                    myCommand.Parameters.AddWithValue("@DeptName", dep.DeptName);
-                    myReader = myCommand.ExecuteReader();
-                    table.Load(myReader);
-                    myReader.Close();
-                    myCon.Close();
-                }
+                return new JsonResult(new Created());
             }
-
-            return new JsonResult(new Created());
-
+            else
+            {
+                return StatusCode(500);
+            }
         }
 
         [HttpPut]
-        public JsonResult Update(Department dep)
+        public IActionResult Update(Department dep)
         {
-            string query = @"update dbo.Department
-                            set DeptName = @DeptName
-                            where Id = @Id
-                            ";
 
-            DataTable table = new DataTable();
-
-            string sqlDataSource = _configuration.GetConnectionString("SqlDataBase");
-            SqlDataReader myReader;
-            using (SqlConnection myCon = new SqlConnection(sqlDataSource))
+            DepartmentMethods Dept = new DepartmentMethods(_configuration);
+            var DeptById = Dept.listDataById(dep.Id);
+            if (DeptById != null)
             {
-                myCon.Open();
-                using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                bool isUpdated = Dept.updateDepartment(dep);
+                if (isUpdated)
                 {
-                    myCommand.Parameters.AddWithValue("@Id", dep.Id);
-                    myCommand.Parameters.AddWithValue("@DeptName", dep.DeptName);
-                    myReader = myCommand.ExecuteReader();
-                    table.Load(myReader);
-                    myReader.Close();
-                    myCon.Close();
+                    return new JsonResult(new Updated());
+                }
+                else
+                {
+                    return StatusCode(500);
                 }
             }
-
-            return new JsonResult(new Updated());
+            else
+            {
+                return NotFound();
+            }
 
         }
 
 
         [HttpDelete("{Id}")]
-        public JsonResult Delete(int Id)
+        public IActionResult Delete(int Id)
         {
-            string query = @"delete dbo.Department
-                            where Id = @Id
-                            ";
-
-            DataTable table = new DataTable();
-
-            string sqlDataSource = _configuration.GetConnectionString("SqlDataBase");
-            SqlDataReader myReader;
-            using (SqlConnection myCon = new SqlConnection(sqlDataSource))
+            DepartmentMethods Dept = new DepartmentMethods(_configuration);
+            var DeptById = Dept.listDataById(Id);
+            if (DeptById != null)
             {
-                myCon.Open();
-                using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                bool isDeleted = Dept.deleteDepartment(Id);
+                if (isDeleted)
                 {
-                    myCommand.Parameters.AddWithValue("@Id", Id);
-                    myReader = myCommand.ExecuteReader();
-                    table.Load(myReader);
-                    myReader.Close();
-                    myCon.Close();
+                    return new JsonResult(new Deleted());
+                }
+                else
+                {
+                    return StatusCode(500);
                 }
             }
-
-            return new JsonResult(new Deleted());
+            else
+            {
+                return NotFound();
+            }
 
         }
 
