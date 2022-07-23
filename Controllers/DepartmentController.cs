@@ -24,6 +24,7 @@ namespace SqlServerRestApi.Controllers
         public IActionResult Get()
         {
             DepartmentMethods Dept = new DepartmentMethods(_configuration);
+            Console.WriteLine("Test");
             return new JsonResult(Dept.listAllData());
         }
 
